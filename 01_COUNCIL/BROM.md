@@ -1,4 +1,16 @@
 ---
+entity_type: council_agent
+governance_class: tier_1
+authority_scope: architecture_validation
+sim_id_prefix: BRM-CTO
+ledger_actor: true
+decision_authority: true
+execution_authority: false
+economic_authority: false
+architect_override_required: true
+indexed_by_llamaindex: true
+---
+---
 agent: Brom
 title: Architecture Guardian (CTO Equivalent)
 tier: Council
