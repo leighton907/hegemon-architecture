@@ -4,8 +4,10 @@ Roxy evaluates requests and routes through governance and economic checks.
 Does NOT execute actions.
 """
 from council_authority import verify_authority
-from sorin_gate import approve_cost
+from executor_gateway import execute_request
+from juror_verifier import verify_against_docs
 from ledger_writer import log_event
+from sorin_econ import verify_economic
 
 
 def _required_role(request: str) -> str:
@@ -21,7 +23,7 @@ def _required_role(request: str) -> str:
 def process_request(actor: str, request: str, estimated_tokens: int) -> str:
     """
     Evaluate request: log start, check authority, check cost, return status.
-    Returns: APPROVED_FOR_EXECUTION | DENIED_AUTHORITY | DENIED_COST
+    Returns: APPROVED_AND_EXECUTED | DENIED_AUTHORITY | DENIED_GROUND_TRUTH | DENIED_COST
     """
     log_event(
         actor="RXY-CEO",
@@ -39,7 +41,21 @@ def process_request(actor: str, request: str, estimated_tokens: int) -> str:
         )
         return "DENIED_AUTHORITY"
 
-    if not approve_cost(actor, estimated_tokens, request):
+    juror_result = verify_against_docs(request)
+    if not juror_result["pass"]:
+        log_event(
+            actor="JUROR",
+            action="verification_denied",
+            details=request,
+        )
+        return "DENIED_GROUND_TRUTH"
+
+    econ_result = verify_economic(
+        juror_result["matched_domains"],
+        estimated_tokens,
+        request,
+    )
+    if econ_result != "ECON_APPROVED":
         log_event(
             actor="RXY-CEO",
             action="economic_denied",
@@ -52,7 +68,8 @@ def process_request(actor: str, request: str, estimated_tokens: int) -> str:
         action="request_approved",
         details=request,
     )
-    return "APPROVED_FOR_EXECUTION"
+    execute_request(actor, request)
+    return "APPROVED_AND_EXECUTED"
 
 
 if __name__ == "__main__":
