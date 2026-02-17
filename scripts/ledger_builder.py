@@ -5,7 +5,7 @@ Derived from docs/LEDGER_GOVERNANCE.md (and docs/LEDGER.md where present).
 import sqlite3
 import pathlib
 import hashlib
-import datetime
+from datetime import datetime, timezone
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 DB_PATH = REPO_ROOT / "data" / "HEGEMON-AUDIT-LEDGER.sqlite"
@@ -56,4 +56,4 @@ if __name__ == "__main__":
     for doc in ["ARCHITECTURE.md", "LEDGER_GOVERNANCE.md", "VISUAL_IDENTITY.md"]:
         p = REPO_ROOT / "docs" / doc
         if p.exists():
-            print(f"{p.name}: SHA256 {sha256_file(p)} @ {datetime.datetime.utcnow().isoformat()} UTC")
+            print(f"{p.name}: SHA256 {sha256_file(p)} @ {datetime.now(timezone.utc).isoformat()} UTC")
