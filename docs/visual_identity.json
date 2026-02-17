@@ -1,0 +1,7 @@
+{
+  "root": { "color": "#0047AB", "intent": "Command", "asset": "heg-root-v1-blue.png" },
+  "base": { "color": "#000000", "intent": "Foundation", "asset": "heg-base-v1-black.png" },
+  "ops": { "color": "#800080", "intent": "Engine", "asset": "heg-ops-v1-purple.png" },
+  "data": { "color": "#008000", "intent": "Memory", "asset": "heg-data-v1-green.png" },
+  "chat": { "color": "#FFA500", "intent": "Persona", "asset": "heg-chat-v1-orange.png" }
+}
