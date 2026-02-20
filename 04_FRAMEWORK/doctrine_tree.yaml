@@ -1,2 +1,387 @@
-# doctrine_tree.yaml - Placeholder
-# Doctrine tree and hierarchy definitions
+# doctrine_tree.yaml
+# Hegemon Doctrine Tree — Domain Hierarchy and Routing Rules
+# Version: 1.0
+# Authority: Architect Command Manifest v2.5 — Section 3
+# Consumed by: Workflow 06 (Intent Router), Sorin (SRN-CIO), Astra (AST-GOV),
+#              Juror system (AST-DCL-01 Doctrine Compliance Sub-Agent)
+#
+# This file defines:
+#   1. The complete domain taxonomy for task classification
+#   2. Which agent owns each domain
+#   3. Routing rules for the Intent Classification Router (Workflow 06)
+#   4. Grounding requirements — what corpus sources an agent must cite per domain
+#   5. The Juror domain registry — which domains require doctrine verification
+
+schema_version: "1.0"
+last_updated: "2026-02-20"
+signed_by: "Architect [leighton907]"
+
+# ─────────────────────────────────────────────
+# DOMAIN TAXONOMY
+# Every task classified by Workflow 06 maps to one of these domains.
+# Multi-intent tasks escalate to Roxy for decomposition.
+# ─────────────────────────────────────────────
+domains:
+
+  # ── GOVERNANCE ────────────────────────────────────────────────────────
+  GOVERNANCE:
+    owner: AST-GOV
+    routing_agent: RXY-CEO       # Roxy routes governance tasks to Astra for review
+    description: "Doctrine, charter, protocol, policy, compliance, and governance integrity"
+    keywords:
+      - doctrine
+      - charter
+      - protocol
+      - policy
+      - approve
+      - reject
+      - vote
+      - ledger
+      - audit
+      - compliance
+      - governance
+      - amendment
+      - change proposal
+      - corpus
+      - architecture
+      - hierarchy
+    requires_juror_verification: true
+    juror_agent: AST-DCL-01
+    grounding_sources:
+      required:
+        - COUNCIL_CHARTER
+        - COUNCIL_PROTOCOLS
+        - HEGEMON_ARCHITECTURE
+      optional:
+        - SEPARATION_OF_POWERS
+        - CHANGE_CONTROL_PROTOCOL
+    escalation_threshold: any    # any governance task escalates through full Council review
+
+  # ── BUILD ─────────────────────────────────────────────────────────────
+  BUILD:
+    owner: BRM-CTO
+    routing_agent: BRM-CTO
+    description: "Agent creation, workflow design, platform integration, infrastructure, deployment"
+    keywords:
+      - build
+      - create
+      - deploy
+      - workflow
+      - integrate
+      - automate
+      - code
+      - script
+      - setup
+      - install
+      - configure
+      - container
+      - docker
+      - infrastructure
+      - n8n
+      - webhook
+      - agent design
+    requires_juror_verification: true
+    juror_agent: AST-DCL-01
+    grounding_sources:
+      required:
+        - agent_schema
+        - SAFE_DEPLOY_GUIDE
+        - POLICY_MANIFEST
+      optional:
+        - HEGEMON_ARCHITECTURE
+        - ACCESS_MATRIX
+    escalation_threshold: council_vote_required   # all BUILD tasks need Council vote
+
+  # ── RESEARCH ──────────────────────────────────────────────────────────
+  RESEARCH:
+    owner: SRN-CIO
+    routing_agent: SRN-CIO
+    description: "Market research, competitive analysis, data gathering, summarization, evaluation"
+    keywords:
+      - analyze
+      - research
+      - investigate
+      - evaluate
+      - report
+      - assess
+      - compare
+      - summarize
+      - gather
+      - survey
+      - benchmark
+      - market
+      - competitor
+      - data
+      - findings
+    requires_juror_verification: true
+    juror_agent: SRN-RSK-01
+    grounding_sources:
+      required:
+        - corpus_first    # always check corpus before external sources
+      optional:
+        - external_web    # via SRN-MRS-01 only
+    escalation_threshold: confidence_below_medium  # escalate to Roxy if Sorin confidence < MEDIUM
+
+  # ── STRATEGY ──────────────────────────────────────────────────────────
+  STRATEGY:
+    owner: SRN-CIO
+    routing_agent: SRN-CIO
+    description: "Venture planning, ROI analysis, business structure design, operational roadmaps"
+    keywords:
+      - plan
+      - strategy
+      - optimize
+      - ROI
+      - revenue
+      - venture
+      - profit
+      - risk
+      - forecast
+      - business
+      - launch
+      - roadmap
+      - model
+      - funnel
+      - affiliate
+      - monetize
+      - opportunity
+    requires_juror_verification: true
+    juror_agent: VRA-ROI-01     # economic verification required for strategy tasks
+    grounding_sources:
+      required:
+        - profit_equilibrium_formula
+        - doctrine_tree
+      optional:
+        - external_research
+    escalation_threshold: council_vote_required_if_spend  # escalate if strategy involves spending
+
+  # ── COMMS ─────────────────────────────────────────────────────────────
+  COMMS:
+    owner: RXY-CEO
+    routing_agent: RXY-CEO
+    description: "Outbound messaging, notifications, alerts, email, stakeholder communications"
+    keywords:
+      - send
+      - message
+      - notify
+      - email
+      - alert
+      - announce
+      - contact
+      - reply
+      - communicate
+      - broadcast
+      - telegram
+      - discord
+      - report
+    requires_juror_verification: false
+    grounding_sources:
+      required: []
+      optional:
+        - task_context     # cite originating task
+    escalation_threshold: never   # COMMS tasks do not escalate unless content flags ethical concern
+
+  # ── SYSTEM ────────────────────────────────────────────────────────────
+  SYSTEM:
+    owner: RXY-CEO
+    routing_agent: RXY-CEO
+    description: "System health, monitoring, sync, backup, status checks, ledger operations"
+    keywords:
+      - status
+      - health
+      - monitor
+      - sync
+      - backup
+      - restart
+      - check
+      - log
+      - ledger
+      - audit
+      - corpus sync
+      - token budget
+      - watchdog
+    requires_juror_verification: false
+    grounding_sources:
+      required: []
+      optional: []
+    escalation_threshold: on_failure   # SYSTEM tasks escalate only if they produce FAILURE outcome
+
+  # ── ECONOMIC ──────────────────────────────────────────────────────────
+  ECONOMIC:
+    owner: VRA-CFO
+    routing_agent: VRA-CFO
+    description: "Budget decisions, token economics, resource allocation, financial clearance"
+    keywords:
+      - budget
+      - spend
+      - cost
+      - token
+      - clearance
+      - allocation
+      - limit
+      - economic
+      - finance
+      - expense
+      - rate
+      - pricing
+    requires_juror_verification: true
+    juror_agent: VRA-ROI-01
+    grounding_sources:
+      required:
+        - profit_equilibrium_formula
+        - POLICY_MANIFEST
+    escalation_threshold: council_vote_required_if_limit_change
+
+  # ── SECURITY ──────────────────────────────────────────────────────────
+  SECURITY:
+    owner: BRM-CTO
+    routing_agent: RXY-CEO      # Roxy escalates all security tasks immediately to Council
+    description: "Security events, injection attempts, access violations, credential operations"
+    keywords:
+      - security
+      - injection
+      - blocked
+      - violation
+      - unauthorized
+      - credentials
+      - token
+      - breach
+      - anomaly
+      - denied
+      - suspicious
+    requires_juror_verification: false
+    grounding_sources:
+      required:
+        - PROMPT_INJECTION_POLICY
+        - ACCESS_MATRIX
+    escalation_threshold: always  # all SECURITY domain tasks go directly to Council review
+
+  # ── UNKNOWN ───────────────────────────────────────────────────────────
+  UNKNOWN:
+    owner: RXY-CEO
+    routing_agent: RXY-CEO
+    description: "Tasks that do not match any domain — default escalation to Roxy"
+    keywords: []
+    requires_juror_verification: false
+    grounding_sources:
+      required: []
+    escalation_threshold: always
+    alert_architect: true      # all UNKNOWN tasks trigger Telegram alert to Architect
+
+# ─────────────────────────────────────────────
+# ROUTING RULES
+# Used by Workflow 06 Intent Classification Router
+# ─────────────────────────────────────────────
+routing_rules:
+
+  # Single-domain tasks route directly
+  single_domain:
+    GOVERNANCE: AST-GOV       # via Roxy
+    BUILD: BRM-CTO
+    RESEARCH: SRN-CIO
+    STRATEGY: SRN-CIO
+    COMMS: RXY-CEO
+    SYSTEM: RXY-CEO
+    ECONOMIC: VRA-CFO
+    SECURITY: RXY-CEO         # immediate Council escalation
+    UNKNOWN: RXY-CEO          # default with Telegram alert
+
+  # Multi-domain tasks always go to Roxy for decomposition
+  multi_domain:
+    condition: "task classified into 2 or more domains"
+    route_to: RXY-CEO
+    roxy_action: decompose_into_subtasks
+
+  # Confidence thresholds for routing
+  confidence_routing:
+    HIGH:    3_or_more_keyword_matches
+    MEDIUM:  2_keyword_matches
+    LOW:     1_keyword_match
+    low_confidence_action: route_to_roxy_for_clarification
+
+  # Priority overrides
+  priority_overrides:
+    - condition: "task contains SECURITY domain keywords"
+      override: route_to_roxy_immediately_regardless_of_other_domains
+    - condition: "task priority == high"
+      override: require_council_vote_before_execution
+    - condition: "task contains deploy OR delete OR modify doctrine OR create agent"
+      override: require_council_vote_before_execution
+
+# ─────────────────────────────────────────────
+# JUROR SYSTEM — DOMAIN VERIFICATION REGISTRY
+# Defines which domains require doctrine verification before a proposal
+# is submitted to the Council, and which agent performs the verification.
+#
+# Juror verification answers the question:
+# "Does this proposal comply with Hegemon doctrine?"
+# A failed juror check blocks the proposal from reaching a Council vote.
+# ─────────────────────────────────────────────
+juror_registry:
+
+  - domain: GOVERNANCE
+    juror: AST-DCL-01          # Doctrine Compliance Sub-Agent
+    verification_checks:
+      - "Proposal does not contradict COUNCIL_CHARTER v2.6"
+      - "Proposal does not contradict COUNCIL_PROTOCOLS"
+      - "Proposal does not grant authority above the requestor's tier"
+      - "Change proposal format (CP-XXXX) used if doctrine modification is involved"
+    fail_action: block_proposal_and_return_to_sorin_with_violations
+
+  - domain: BUILD
+    juror: AST-DCL-01
+    verification_checks:
+      - "New agent definition conforms to agent_schema.yaml"
+      - "Tool assignments comply with ACCESS_MATRIX"
+      - "No agent created at tier above TIER_2_SUBAGENT without Architect approval"
+      - "Infrastructure changes comply with SAFE_DEPLOY_GUIDE"
+    fail_action: block_proposal_and_return_to_sorin_with_violations
+
+  - domain: RESEARCH
+    juror: SRN-RSK-01          # Risk Scoring Sub-Agent
+    verification_checks:
+      - "All claims in proposal cite a source (corpus ref or external URL)"
+      - "No claim marked source:reasoning without explicit flagging"
+      - "Risk assessment is present and not suppressed"
+    fail_action: return_to_sorin_for_revision
+
+  - domain: STRATEGY
+    juror: VRA-ROI-01          # ROI Scoring Sub-Agent
+    verification_checks:
+      - "Financial projections validated against profit_equilibrium_formula"
+      - "ROI score present — NEGATIVE score requires documented rationale"
+      - "Capital risk rating present"
+      - "Estimated cost does not exceed single_task_limit without Architect approval ref"
+    fail_action: block_if_negative_roi_undocumented_else_flag_warning
+
+  - domain: ECONOMIC
+    juror: VRA-ROI-01
+    verification_checks:
+      - "Proposed budget change cites economic_metrics authority"
+      - "No budget limit reduced below operational minimum without Architect approval"
+    fail_action: block_and_escalate_to_architect
+
+  - domain: SECURITY
+    juror: null                # No juror — security events bypass juror and go straight to Council
+    verification_checks: []
+    fail_action: n/a
+
+# ─────────────────────────────────────────────
+# GROUNDING SOURCES INDEX
+# Canonical names → file paths in the corpus
+# Referenced by domains above as required grounding sources
+# ─────────────────────────────────────────────
+grounding_sources_index:
+  COUNCIL_CHARTER:            "01_COUNCIL/COUNCIL_CHARTER.md"
+  COUNCIL_PROTOCOLS:          "01_COUNCIL/COUNCIL_PROTOCOLS.md"
+  HEGEMON_ARCHITECTURE:       "docs/HEGEMON_ARCHITECTURE.md"
+  SEPARATION_OF_POWERS:       "01_COUNCIL/SEPARATION_OF_POWERS.md"
+  CHANGE_CONTROL_PROTOCOL:    "01_COUNCIL/CHANGE_CONTROL_PROTOCOL.md"
+  agent_schema:               "04_FRAMEWORK/agent_schema.yaml"
+  doctrine_tree:              "04_FRAMEWORK/doctrine_tree.yaml"
+  SAFE_DEPLOY_GUIDE:          "05_SECURITY/SAFE_DEPLOY_GUIDE.md"
+  POLICY_MANIFEST:            "05_SECURITY/POLICY_MANIFEST.yaml"
+  ACCESS_MATRIX:              "05_SECURITY/ACCESS_MATRIX.md"
+  PROMPT_INJECTION_POLICY:    "05_SECURITY/PROMPT_INJECTION_POLICY.md"
+  profit_equilibrium_formula:  "07_LEDGER_RULES/profit_equilibrium_formula.md"
+  audit_ledger_spec:          "07_LEDGER_RULES/audit_ledger_spec.md"

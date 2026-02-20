@@ -1,2 +1,323 @@
-# agent_schema.yaml - Placeholder
-# Agent schema and structure definitions
+# agent_schema.yaml
+# Hegemon Agent Definition Schema
+# Version: 1.0
+# Authority: Architect Command Manifest v2.5 — Section 3
+# Enforced by: Brom (BRM-CTO) via tool_policy.py at agent creation/modification
+#
+# This file defines the required structure for every agent in the system.
+# Any agent definition that does not conform to this schema is invalid
+# and will be rejected by Brom's validation check.
+#
+# Usage:
+#   - Council agents:  01_COUNCIL/{AGENT}.md frontmatter must match tier_1 schema
+#   - Sub-agents:      02_SUBAGENTS/SUBAGENT_DEFINITIONS.md entries must match tier_2 schema
+#   - Workers:         03_WORKERS/WORKERS_FRAMEWORK.md entries must match tier_3 schema
+
+schema_version: "1.0"
+last_updated: "2026-02-20"
+signed_by: "Architect [leighton907]"
+
+# ─────────────────────────────────────────────
+# REQUIRED FIELDS — all agents, all tiers
+# ─────────────────────────────────────────────
+required_fields:
+  - field: entity_type
+    type: string
+    allowed_values:
+      - council_agent
+      - governance_agent
+      - subagent
+      - worker
+    description: "The classification of this agent within the Hegemon hierarchy"
+
+  - field: sim_id
+    type: string
+    format: "{PREFIX}-{ROLE}-{INDEX}"
+    examples: [RXY-CEO, SRN-CIO, BRM-CTO, VRA-CFO, AST-GOV, RXY-TDC-01, WRK-001]
+    description: "Unique simulation ID — used in all ledger entries and tool policy checks"
+    uniqueness: globally_unique
+
+  - field: agent_name
+    type: string
+    description: "Human-readable agent name (e.g. Roxy, Sorin, Task Decomposition Sub-Agent)"
+
+  - field: tier
+    type: string
+    allowed_values:
+      - TIER_1_COUNCIL
+      - TIER_1_GOV
+      - TIER_2_SUBAGENT
+      - TIER_3_WORKER
+    description: "Authority tier — determines tool access and spawn permissions"
+
+  - field: version
+    type: string
+    format: "MAJOR.MINOR"
+    description: "Agent definition version — increment on any structural change"
+
+  - field: status
+    type: string
+    allowed_values: [active, inactive, dev, retired, pending_approval]
+    description: "Current operational status"
+
+  - field: parent_agent
+    type: string
+    nullable: true
+    description: "sim_id of the parent agent. Null for Tier 1 agents."
+
+  - field: purpose
+    type: string
+    min_length: 50
+    description: "One-paragraph description of this agent's role and mandate"
+
+  - field: allowed_actions
+    type: list
+    min_items: 1
+    description: "Explicit list of actions this agent may take"
+
+  - field: forbidden_actions
+    type: list
+    min_items: 1
+    description: "Explicit list of actions this agent may never take"
+
+  - field: ledger_actor
+    type: boolean
+    description: "Whether this agent writes directly to the audit ledger"
+
+# ─────────────────────────────────────────────
+# TIER-SPECIFIC REQUIRED FIELDS
+# ─────────────────────────────────────────────
+tier_requirements:
+
+  TIER_1_COUNCIL:
+    additional_required_fields:
+      - field: decision_authority
+        type: boolean
+        description: "Can participate in Council votes"
+
+      - field: execution_authority
+        type: boolean
+        description: "Can execute approved Council decisions (only Brom = true)"
+
+      - field: economic_authority
+        type: boolean
+        description: "Can issue economic clearance (only Vera = true)"
+
+      - field: architect_override_required
+        type: boolean
+        must_be: true
+        description: "All Tier 1 agents require Architect approval for structural changes"
+
+      - field: council_vote_weight
+        type: integer
+        allowed_values: [1]
+        description: "Voting weight — always 1 for Council members"
+
+      - field: webhook_path
+        type: string
+        format: "/{agent-name}-{action}"
+        description: "The n8n/webhook endpoint this agent listens on"
+
+      - field: autonomy_envelope
+        type: object
+        required_keys: [green, yellow, red]
+        description: "Defines Green/Yellow/Red zone conditions and actions"
+
+      - field: sub_agents_managed
+        type: list
+        description: "List of sub-agent sim_ids this Council agent spawns and manages"
+
+      - field: escalation_rules
+        type: list
+        min_items: 2
+        description: "Conditions that trigger escalation to Architect or Council"
+
+  TIER_1_GOV:
+    additional_required_fields:
+      - field: architect_override_required
+        type: boolean
+        must_be: true
+
+      - field: corpus_write_authority
+        type: boolean
+        description: "Can propose writes to corpus (requires Architect approval to execute)"
+
+      - field: governance_violation_authority
+        type: boolean
+        description: "Can flag governance violations and halt Council votes"
+
+      - field: council_vote_weight
+        type: integer
+        must_be: 0
+        description: "Governance observers do not vote"
+
+  TIER_2_SUBAGENT:
+    additional_required_fields:
+      - field: parent_agent
+        type: string
+        nullable: false
+        description: "Must have a registered parent Council agent"
+
+      - field: model_tier
+        type: string
+        allowed_values: [PREMIUM, STANDARD, ECONOMY, FREE]
+        description: "Default model tier for this sub-agent's operations"
+
+      - field: allowed_tools
+        type: list
+        description: "Explicit list of tools from tool_policy.py TOOL_REGISTRY this sub-agent may use"
+
+      - field: max_concurrent_workers
+        type: integer
+        description: "Maximum number of workers this sub-agent may spawn simultaneously"
+
+      - field: timeout_seconds
+        type: integer
+        description: "Maximum runtime before sub-agent is considered stalled"
+
+  TIER_3_WORKER:
+    additional_required_fields:
+      - field: parent_agent
+        type: string
+        description: "sim_id of the sub-agent or Council agent that spawns this worker"
+
+      - field: model_tier
+        type: string
+        allowed_values: [ECONOMY, FREE]
+        description: "Workers may only use ECONOMY or FREE tiers"
+
+      - field: stateless
+        type: boolean
+        must_be: true
+        description: "Workers are always stateless — no memory between spawns"
+
+      - field: timeout_seconds
+        type: integer
+        max_value: 60
+        description: "Workers must complete within 60 seconds"
+
+      - field: input_schema
+        type: object
+        description: "Expected input fields with types"
+
+      - field: output_schema
+        type: object
+        description: "Output fields with types — must always include status field"
+
+# ─────────────────────────────────────────────
+# LEDGER OBLIGATIONS SCHEMA
+# Required for any agent with ledger_actor: true
+# ─────────────────────────────────────────────
+ledger_obligations_schema:
+  description: "Every ledger-writing agent must define its event table"
+  required_event_fields:
+    - field: actor
+      value: "{agent sim_id}"
+    - field: action
+      format: "SCREAMING_SNAKE_CASE"
+      examples: [TASK_RECEIVED, EXECUTION_STARTED, VOTE_CAST, INJECTION_BLOCKED]
+    - field: outcome
+      allowed_values: [SUCCESS, FAILURE, BLOCKED, PENDING, WARNING, APPROVED, REJECTED]
+
+# ─────────────────────────────────────────────
+# VALIDATION RULES
+# Applied by Brom (BRM-CTO) on agent_create and agent_modify tool calls
+# ─────────────────────────────────────────────
+validation_rules:
+
+  - rule: sim_id_uniqueness
+    check: "sim_id must not exist in the current agent registry"
+    action_on_fail: reject_with_reason
+
+  - rule: parent_agent_registered
+    check: "parent_agent sim_id must exist in the agent registry (Tier 2 and 3 only)"
+    action_on_fail: reject_with_reason
+
+  - rule: tier_tool_compliance
+    check: "allowed_tools list must only contain tools permitted for this agent's tier per tool_policy.py"
+    action_on_fail: reject_with_reason
+
+  - rule: worker_model_tier
+    check: "Tier 3 workers may not use PREMIUM or STANDARD model tiers"
+    action_on_fail: reject_with_reason
+
+  - rule: council_vote_weight
+    check: "TIER_1_GOV agents must have council_vote_weight: 0. TIER_1_COUNCIL agents must have council_vote_weight: 1."
+    action_on_fail: reject_with_reason
+
+  - rule: forbidden_actions_non_empty
+    check: "forbidden_actions list must contain at least one entry"
+    action_on_fail: reject_with_reason
+
+  - rule: architect_approval_for_tier1
+    check: "Creating or modifying any Tier 1 agent requires architect_approval_ref in the Council vote context"
+    action_on_fail: block_and_escalate_to_architect
+
+# ─────────────────────────────────────────────
+# REGISTERED AGENTS — current registry
+# Brom checks new agents against this list for sim_id uniqueness
+# ─────────────────────────────────────────────
+registered_agents:
+
+  council:
+    - sim_id: RXY-CEO
+      agent_name: Roxy
+      tier: TIER_1_COUNCIL
+      status: active
+      definition_path: 01_COUNCIL/ROXY.md
+
+    - sim_id: SRN-CIO
+      agent_name: Sorin
+      tier: TIER_1_COUNCIL
+      status: active
+      definition_path: 01_COUNCIL/SORIN.md
+
+    - sim_id: BRM-CTO
+      agent_name: Brom
+      tier: TIER_1_COUNCIL
+      status: active
+      definition_path: 01_COUNCIL/BROM.md
+
+    - sim_id: VRA-CFO
+      agent_name: Vera
+      tier: TIER_1_COUNCIL
+      status: active
+      definition_path: 01_COUNCIL/VERA.md
+
+  governance:
+    - sim_id: AST-GOV
+      agent_name: Astra
+      tier: TIER_1_GOV
+      status: dev  # dev instance — retire before deploying production Astra
+      definition_path: 01_COUNCIL/ASTRA.md
+
+  subagents:
+    - { sim_id: RXY-TDC-01, parent: RXY-CEO, status: active }
+    - { sim_id: RXY-MON-01, parent: RXY-CEO, status: active }
+    - { sim_id: RXY-COM-01, parent: RXY-CEO, status: active }
+    - { sim_id: SRN-MRS-01, parent: SRN-CIO, status: active }
+    - { sim_id: SRN-FIN-01, parent: SRN-CIO, status: active }
+    - { sim_id: SRN-RSK-01, parent: SRN-CIO, status: active }
+    - { sim_id: BRM-WFB-01, parent: BRM-CTO, status: active }
+    - { sim_id: BRM-INT-01, parent: BRM-CTO, status: active }
+    - { sim_id: BRM-INF-01, parent: BRM-CTO, status: active }
+    - { sim_id: VRA-TKL-01, parent: VRA-CFO, status: active }
+    - { sim_id: VRA-MDL-01, parent: VRA-CFO, status: active }
+    - { sim_id: VRA-ROI-01, parent: VRA-CFO, status: active }
+    - { sim_id: AST-AUD-01, parent: AST-GOV, status: active }
+    - { sim_id: AST-CPD-01, parent: AST-GOV, status: active }
+    - { sim_id: AST-DCL-01, parent: AST-GOV, status: active }
+
+  workers:
+    - { sim_id: WRK-001, name: Web Scraper,              status: active }
+    - { sim_id: WRK-002, name: Keyword Extractor,        status: active }
+    - { sim_id: WRK-003, name: Link Validator,           status: active }
+    - { sim_id: WRK-004, name: Email Template Formatter, status: active }
+    - { sim_id: WRK-005, name: HubSpot Field Updater,    status: active }
+    - { sim_id: WRK-006, name: Ledger Entry,             status: active }
+    - { sim_id: WRK-007, name: Cost Calculator,          status: active }
+    - { sim_id: WRK-008, name: SHA Hash,                 status: active }
+    - { sim_id: WRK-009, name: Telegram Message,         status: active }
+    - { sim_id: WRK-010, name: Data Parser,              status: active }
+    - { sim_id: WRK-011, name: GitHub File Fetch,        status: active }
+    - { sim_id: WRK-012, name: Venture Stage Updater,    status: active }
