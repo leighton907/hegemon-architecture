@@ -1,0 +1,5 @@
+doctrine_file: astra-runtime/system/ASTRA_DOCTRINE.md
+memory:
+  path: astra-runtime
+logging:
+  log_file: astra-runtime/logs/astra.log
