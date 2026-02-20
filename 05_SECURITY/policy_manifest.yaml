@@ -1,2 +1,351 @@
-# policy_manifest.yaml - Placeholder
-# Security and governance policy manifest
+# POLICY_MANIFEST.yaml
+# Hegemon Security and Governance Policy Manifest
+# Version: 1.0
+# Authority: Architect Command Manifest v2.5
+# Consumed by: Orgo watchdog, openclaw_core/tool_policy.py, n8n sanitization nodes
+#
+# This file is the machine-readable source of truth for policy enforcement.
+# Human-readable explanations are in the 05_SECURITY/ documents.
+# DO NOT modify this file without Architect approval and a CP-XXXX change proposal.
+
+manifest_version: "1.0"
+last_updated: "2026-02-20"
+signed_by: "Architect [leighton907]"
+
+# ─────────────────────────────────────────────
+# INJECTION PROTECTION POLICY
+# ─────────────────────────────────────────────
+injection_protection:
+  enabled: true
+  default_mode: strict  # strict | permissive
+  
+  # Per-agent mode overrides (default is strict for all)
+  agent_overrides:
+    RXY-CEO: strict
+    SRN-CIO: strict
+    BRM-CTO: strict
+    VRA-CFO: strict
+    AST-GOV: strict
+
+  severity_actions:
+    CRITICAL:
+      block: true
+      alert_architect: true
+      alert_roxy: true
+      log_to_ledger: true
+    HIGH:
+      block: true
+      alert_architect: false
+      alert_roxy: true
+      log_to_ledger: true
+    MEDIUM:
+      strict_mode_block: true
+      permissive_mode_sanitize: true
+      alert_architect: false
+      alert_roxy: false
+      log_to_ledger: true
+    LOW:
+      block: false
+      sanitize: false
+      alert_architect: false
+      alert_roxy: false
+      log_to_ledger: true
+
+  untrusted_sources:
+    - telegram
+    - discord
+    - webhook
+    - web_scrape
+    - hubspot
+    - external_api
+    - github_file
+    - email
+    - unknown
+
+  trusted_sources:
+    - council_internal
+    - roxy_dispatch
+    - sorin_proposal
+    - brom_execution
+    - vera_clearance
+    - astra_validation
+
+  boundary_wrap_untrusted: true
+  boundary_tag_open: "[EXTERNAL_DATA source={source}]"
+  boundary_tag_close: "[/EXTERNAL_DATA]"
+
+# ─────────────────────────────────────────────
+# TOOL AUTHORIZATION POLICY
+# ─────────────────────────────────────────────
+tool_authorization:
+  enabled: true
+  deny_unregistered_tools: true
+  log_all_denials: true
+  log_all_authorizations: true
+
+  # Tier hierarchy — lower number = higher privilege
+  tiers:
+    TIER_1_COUNCIL:
+      level: 1
+      agents: [RXY-CEO, SRN-CIO, BRM-CTO, VRA-CFO]
+    TIER_1_GOV:
+      level: 1
+      agents: [AST-GOV]
+    TIER_2_SUBAGENT:
+      level: 2
+      agents:
+        - RXY-TDC-01   # Task Decomposition
+        - RXY-MON-01   # Status Monitor
+        - RXY-COM-01   # Comms Formatting
+        - SRN-MRS-01   # Market Research
+        - SRN-FIN-01   # Financial Modeling
+        - SRN-RSK-01   # Risk Scoring
+        - BRM-WFB-01   # Workflow Builder
+        - BRM-INT-01   # Integration
+        - BRM-INF-01   # Infrastructure
+        - VRA-TKL-01   # Token Ledger
+        - VRA-MDL-01   # Model Router
+        - VRA-ROI-01   # ROI Scoring
+        - AST-AUD-01   # Corpus Audit
+        - AST-CPD-01   # Change Proposal Drafting
+        - AST-DCL-01   # Doctrine Compliance
+    TIER_3_WORKER:
+      level: 3
+      agents:
+        - WRK-001  # Web Scraper
+        - WRK-002  # Keyword Extractor
+        - WRK-003  # Link Validator
+        - WRK-004  # Email Template Formatter
+        - WRK-005  # HubSpot Field Updater
+        - WRK-006  # Ledger Entry
+        - WRK-007  # Cost Calculator
+        - WRK-008  # SHA Hash
+        - WRK-009  # Telegram Message
+        - WRK-010  # Data Parser
+        - WRK-011  # GitHub File Fetch
+        - WRK-012  # Venture Stage Updater
+
+  violation_response:
+    repeated_violations_threshold: 3    # violations in one session
+    repeated_violations_action: hitl_pause
+    log_violation_to_ledger: true
+    notify_parent_agent: true
+
+# ─────────────────────────────────────────────
+# ECONOMIC CLEARANCE POLICY
+# ─────────────────────────────────────────────
+economic_clearance:
+  enabled: true
+  required_for_all_resource_tasks: true
+  clearance_authority: VRA-CFO
+
+  daily_budget_defaults_usd:
+    RXY-CEO: 5.00
+    SRN-CIO: 5.00
+    BRM-CTO: 5.00
+    VRA-CFO: 3.00
+    subagents_each: 1.00
+    workers_pool: 2.00
+
+  budget_thresholds:
+    GREEN:  { max_percent: 70,  action: proceed }
+    YELLOW: { min_percent: 70, max_percent: 90, action: proceed_with_warning }
+    RED:    { min_percent: 90, max_percent: 100, action: proceed_with_alert }
+    EXCEEDED: { min_percent: 100, action: block }
+
+  single_task_limit_usd: 2.00       # tasks over this require prior Architect approval
+  anomaly_multiplier: 3.0           # spend rate >3x baseline triggers red flag
+  
+  model_tiers:
+    PREMIUM:
+      model: claude-opus  # or gpt-4o when using OpenAI
+      rate_per_1k_input: 0.015
+      rate_per_1k_output: 0.075
+      use_cases: [council_decisions, doctrine_review, complex_multi_step_reasoning]
+    STANDARD:
+      model: claude-sonnet  # or gpt-4o-mini
+      rate_per_1k_input: 0.003
+      rate_per_1k_output: 0.015
+      use_cases: [analysis, strategy, research_synthesis, financial_modeling]
+    ECONOMY:
+      model: claude-haiku
+      rate_per_1k_input: 0.00025
+      rate_per_1k_output: 0.00125
+      use_cases: [classification, routing, formatting, subagent_orchestration]
+    FREE:
+      model: ollama_local
+      rate_per_1k_input: 0.00
+      rate_per_1k_output: 0.00
+      use_cases: [scraping, extraction, simple_formatting, all_workers_where_possible]
+
+  financial_red_flag_triggers:
+    - condition: "daily_spend > daily_limit"
+      severity: CRITICAL
+      action: block_and_alert_architect
+    - condition: "single_task_cost > single_task_limit_usd and no_architect_approval"
+      severity: CRITICAL
+      action: block_and_alert_architect
+    - condition: "venture_roi_score == NEGATIVE and no_documented_rationale"
+      severity: HIGH
+      action: block_and_notify_council
+    - condition: "unregistered_agent_clearance_request"
+      severity: CRITICAL
+      action: block_and_alert_architect
+    - condition: "spend_rate > baseline * anomaly_multiplier"
+      severity: HIGH
+      action: alert_vera_and_roxy
+
+# ─────────────────────────────────────────────
+# COUNCIL GOVERNANCE POLICY
+# ─────────────────────────────────────────────
+council_governance:
+  version: "2.6"
+  
+  voting_members: [RXY-CEO, SRN-CIO, BRM-CTO, VRA-CFO]
+  governance_observer: AST-GOV
+  
+  vote_thresholds:
+    standard_operational: 2      # of 4 members
+    red_zone_actions: 3          # of 4 members
+    charter_amendment: 0         # Council vote insufficient — Architect only
+  
+  red_zone_actions:
+    - agent_create
+    - agent_retire
+    - infrastructure_changes
+    - external_spending
+    - new_platform_registration
+    - doctrine_file_write
+    - docker_manage
+    - env_write
+    - n8n_trigger
+    - n8n_create_workflow
+
+  execution_prerequisites:
+    - sorin_proposal_package_required: true
+    - vera_economic_clearance_required: true
+    - council_vote_required: true
+    - ledger_entry_required: true
+
+  hitl_pause:
+    can_issue: [RXY-CEO, SRN-CIO, BRM-CTO, VRA-CFO, AST-GOV, ARCHITECT]
+    can_lift: [ARCHITECT]
+    effects:
+      - halt_all_non_essential_execution
+      - preserve_active_ledger_writes
+      - notify_architect_immediately
+
+  governance_violation:
+    can_flag: [AST-GOV]
+    effect: suspend_active_council_vote
+    resolution: architect_review_required
+
+# ─────────────────────────────────────────────
+# AUDIT AND LOGGING POLICY
+# ─────────────────────────────────────────────
+audit_policy:
+  ledger_write_required_for:
+    - all_council_votes
+    - all_execution_events
+    - all_economic_clearances
+    - all_injection_blocks
+    - all_tool_denials
+    - all_hitl_events
+    - all_agent_spawns
+    - all_secret_rotations
+    - all_governance_violations
+
+  integrity_hash_required: true
+  hash_algorithm: sha256
+  hash_fields: [event_id, actor, action, outcome, timestamp]
+
+  retention:
+    audit_events: permanent
+    token_ledger: 90_days
+    decision_trails: permanent
+    economic_metrics: 365_days
+
+  alert_on_outcomes:
+    - outcome: BLOCKED
+      channels: [telegram_architect]
+    - outcome: FAILURE
+      channels: [telegram_architect, telegram_roxy]
+    - outcome: RED_FLAG_TRIGGERED
+      channels: [telegram_architect]
+
+# ─────────────────────────────────────────────
+# CREDENTIAL AND SECRETS POLICY
+# ─────────────────────────────────────────────
+secrets_policy:
+  storage: env_file_only
+  never_in_corpus: true
+  never_in_git: true
+  never_in_agent_memory: true
+  
+  required_env_vars:
+    - OPENAI_API_KEY
+    - HEGEMON_AUDIT_WEBHOOK
+    - HEGEMON_TOKEN_WEBHOOK
+    - HEGEMON_INTAKE_WEBHOOK
+    - TELEGRAM_BOT_TOKEN
+    - DISCORD_WEBHOOK_URL
+    - GITHUB_TOKEN
+    - RESEND_API_KEY
+    - HUBSPOT_API_KEY
+    - POSTGRES_URL
+    - N8N_BASIC_AUTH_PASSWORD
+    - N8N_ENCRYPTION_KEY
+    - HEGEMON_WEBHOOK_SECRET
+
+  rotation_schedule_days:
+    OPENAI_API_KEY: 90
+    TELEGRAM_BOT_TOKEN: 180
+    GITHUB_TOKEN: 90
+    RESEND_API_KEY: 90
+    HUBSPOT_API_KEY: 180
+    POSTGRES_URL: 90
+    N8N_BASIC_AUTH_PASSWORD: 90
+
+  gitignore_required_patterns:
+    - ".env"
+    - ".env.*"
+    - "*.key"
+    - "*.pem"
+    - "secrets/"
+    - "credentials/"
+    - "data/"
+    - "*.sqlite"
+    - "*.db"
+    - "logs/"
+    - "*.log"
+
+# ─────────────────────────────────────────────
+# NETWORK AND INFRASTRUCTURE POLICY
+# ─────────────────────────────────────────────
+infrastructure_policy:
+  firewall_allowed_ports: [22, 80, 443]
+  agent_communication: internal_docker_network_only
+  agent_network_name: hegemon-net
+  corpus_mount_mode: read_only
+  containers_run_as_root: false
+  ssh_password_auth: false
+  ssh_root_login: false
+  
+  n8n_security:
+    basic_auth_required: true
+    webhook_header_auth_required: true
+    webhook_secret_header: "X-Hegemon-Token"
+
+  ssl_required: true
+  ssl_provider: certbot_letsencrypt
+  auto_renew: true
+
+# ─────────────────────────────────────────────
+# POLICY CHANGE CONTROL
+# ─────────────────────────────────────────────
+change_control:
+  amendment_authority: ARCHITECT
+  proposal_format: CP-XXXX
+  proposal_author: AST-GOV
+  approval_required_before_enforcement: true
+  version_increment_on_change: true
