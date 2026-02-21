@@ -1,0 +1,357 @@
+# Domain_Registry.yaml
+# Authoritative registry of Hegemon domains, owning agents, and tool access.
+# Version: 1.0
+# Authority: SEPARATION_OF_POWERS GOV-002 / agent_schema.yaml
+# Maintained by: AST-GOV
+#
+# This file is the single source of truth for:
+#   - Which agent owns which domain
+#   - Which tools are permitted per domain
+#   - Which sub-agents are authorized to operate per domain
+#   - Orgo policy enforcement rules per domain
+
+version: "1.0"
+last_updated: "2026-02-20"
+maintained_by: "AST-GOV"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DOMAIN REGISTRY
+# ─────────────────────────────────────────────────────────────────────────────
+
+registry:
+
+  GOVERNANCE:
+    owner: "RXY-CEO"
+    authorized_agents: ["RXY-CEO", "AST-GOV"]
+    authorized_subagents: ["RXY-TDC-01", "AST-AUD-01", "AST-CPD-01", "AST-DCL-01"]
+    permitted_tools:
+      - read_corpus
+      - write_ledger
+      - send_telegram
+      - call_council_vote
+    forbidden_tools:
+      - execute_workflow
+      - docker_control
+      - external_api
+      - write_corpus
+    orgo_policy: "read_only_corpus — no writes without architect_approval_ref"
+    escalation_path: ["RXY-CEO", "AST-GOV", "ARCHITECT"]
+
+  BUILD:
+    owner: "BRM-CTO"
+    authorized_agents: ["BRM-CTO"]
+    authorized_subagents: ["BRM-WFB-01", "BRM-INT-01", "BRM-INF-01"]
+    permitted_tools:
+      - execute_workflow
+      - docker_control
+      - n8n_trigger
+      - write_ledger
+      - read_corpus
+      - external_api
+      - agent_registry_write
+    forbidden_tools:
+      - write_corpus
+      - modify_budget_limits
+      - issue_clearance
+    orgo_policy: "requires council_vote_ref AND vera_clearance_ref for all tool use"
+    escalation_path: ["BRM-CTO", "RXY-CEO", "ARCHITECT"]
+
+  RESEARCH:
+    owner: "SRN-CIO"
+    authorized_agents: ["SRN-CIO"]
+    authorized_subagents: ["SRN-MRS-01", "SRN-FIN-01", "SRN-RSK-01"]
+    permitted_tools:
+      - web_search
+      - read_corpus
+      - read_hubspot
+      - write_ledger
+      - send_telegram
+    forbidden_tools:
+      - execute_workflow
+      - docker_control
+      - write_corpus
+      - modify_budget_limits
+      - agent_registry_write
+    orgo_policy: "external_content must be boundary-wrapped before entering agent context"
+    escalation_path: ["SRN-CIO", "RXY-CEO"]
+
+  STRATEGY:
+    owner: "SRN-CIO"
+    authorized_agents: ["SRN-CIO"]
+    authorized_subagents: ["SRN-FIN-01", "SRN-RSK-01", "SRN-MRS-01"]
+    permitted_tools:
+      - web_search
+      - read_corpus
+      - read_hubspot
+      - write_hubspot
+      - write_ledger
+    forbidden_tools:
+      - execute_workflow
+      - docker_control
+      - write_corpus
+      - modify_budget_limits
+    orgo_policy: "financial projections must cite profit_equilibrium_formula.md"
+    escalation_path: ["SRN-CIO", "RXY-CEO", "ARCHITECT"]
+
+  COMMS:
+    owner: "RXY-CEO"
+    authorized_agents: ["RXY-CEO"]
+    authorized_subagents: ["RXY-COM-01"]
+    permitted_tools:
+      - send_telegram
+      - send_discord
+      - send_email
+      - write_ledger
+    forbidden_tools:
+      - execute_workflow
+      - docker_control
+      - write_corpus
+      - external_api
+    orgo_policy: "outbound messages must route through n8n Workflow 02/03/08 — no direct API calls"
+    escalation_path: ["RXY-CEO"]
+
+  SECURITY:
+    owner: "BRM-CTO"
+    authorized_agents: ["BRM-CTO", "AST-GOV"]
+    authorized_subagents: ["BRM-INF-01", "AST-AUD-01"]
+    permitted_tools:
+      - read_corpus
+      - write_ledger
+      - send_telegram
+      - docker_control
+    forbidden_tools:
+      - write_corpus
+      - modify_budget_limits
+      - external_api
+    orgo_policy: "security changes require 3-of-4 Council vote + Architect ref"
+    escalation_path: ["BRM-CTO", "RXY-CEO", "ARCHITECT"]
+
+  ECONOMIC:
+    owner: "VRA-CFO"
+    authorized_agents: ["VRA-CFO"]
+    authorized_subagents: ["VRA-TKL-01", "VRA-MDL-01", "VRA-ROI-01"]
+    permitted_tools:
+      - read_token_ledger
+      - write_token_ledger
+      - read_corpus
+      - write_ledger
+      - send_telegram
+    forbidden_tools:
+      - execute_workflow
+      - docker_control
+      - write_corpus
+      - external_api
+      - agent_registry_write
+    orgo_policy: "budget_limit modifications require architect_approval_ref in payload"
+    escalation_path: ["VRA-CFO", "ARCHITECT"]
+
+  SYSTEM:
+    owner: "RXY-CEO"
+    authorized_agents: ["RXY-CEO", "BRM-CTO"]
+    authorized_subagents: ["RXY-MON-01", "BRM-INF-01"]
+    permitted_tools:
+      - read_corpus
+      - write_ledger
+      - send_telegram
+      - docker_status
+    forbidden_tools:
+      - write_corpus
+      - modify_budget_limits
+      - external_api
+    orgo_policy: "health checks and status reads are GREEN zone — no vote required"
+    escalation_path: ["RXY-CEO", "ARCHITECT"]
+
+  CORPUS:
+    owner: "AST-GOV"
+    authorized_agents: ["AST-GOV"]
+    authorized_subagents: ["AST-AUD-01", "AST-CPD-01", "AST-DCL-01"]
+    permitted_tools:
+      - read_corpus
+      - write_ledger
+      - send_telegram
+      - draft_cp
+    forbidden_tools:
+      - write_corpus
+      - execute_workflow
+      - docker_control
+      - external_api
+      - modify_budget_limits
+    orgo_policy: "corpus writes blocked at Orgo level — require architect_approval_ref"
+    escalation_path: ["AST-GOV", "ARCHITECT"]
+
+  UNKNOWN:
+    owner: "RXY-CEO"
+    authorized_agents: ["RXY-CEO"]
+    authorized_subagents: ["RXY-TDC-01"]
+    permitted_tools:
+      - write_ledger
+      - send_telegram
+    forbidden_tools:
+      - execute_workflow
+      - docker_control
+      - write_corpus
+      - external_api
+    orgo_policy: "UNKNOWN domain tasks blocked from execution — classify first"
+    escalation_path: ["RXY-CEO", "ARCHITECT"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TOOL DEFINITIONS
+# Maps tool names to actual integrations and default authorization level.
+# ─────────────────────────────────────────────────────────────────────────────
+
+tool_definitions:
+
+  read_corpus:
+    integration: "local filesystem / LlamaIndex"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: false
+
+  write_corpus:
+    integration: "local filesystem via Cursor / Brom"
+    default_auth: "RED"
+    requires_vote: true
+    requires_architect_ref: true
+
+  write_ledger:
+    integration: "Workflow 05 — HEGEMON_AUDIT_WEBHOOK"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: false
+
+  read_token_ledger:
+    integration: "Postgres — token_ledger table via VRA-TKL-01"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: false
+
+  write_token_ledger:
+    integration: "Postgres — token_ledger table via VRA-TKL-01"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: false
+
+  send_telegram:
+    integration: "Workflow 02 — HEGEMON_TO_TELEGRAM"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: false
+
+  send_discord:
+    integration: "Workflow 03 — discord_agent"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: false
+
+  send_email:
+    integration: "Workflow 08 — Resend via HEGEMON_SEND_EMAIL"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: true
+
+  web_search:
+    integration: "SRN-MRS-01 — external search via boundary wrapper"
+    default_auth: "YELLOW"
+    requires_vote: false
+    requires_clearance: true
+    boundary_wrap_required: true
+
+  external_api:
+    integration: "varies — BRM-INT-01 mediates all external API calls"
+    default_auth: "YELLOW"
+    requires_vote: true
+    requires_clearance: true
+
+  execute_workflow:
+    integration: "n8n via webhook — requires council_vote_ref"
+    default_auth: "YELLOW"
+    requires_vote: true
+    requires_clearance: true
+
+  n8n_trigger:
+    integration: "n8n webhook"
+    default_auth: "YELLOW"
+    requires_vote: true
+    requires_clearance: true
+
+  docker_control:
+    integration: "Docker daemon via BRM-INF-01"
+    default_auth: "RED"
+    requires_vote: true
+    requires_clearance: false
+    minimum_vote_threshold: "3-of-4"
+
+  docker_status:
+    integration: "Docker daemon — read only"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: false
+
+  agent_registry_write:
+    integration: "agent_schema.yaml write via Brom"
+    default_auth: "RED"
+    requires_vote: true
+    requires_clearance: false
+    minimum_vote_threshold: "2-of-4"
+
+  modify_budget_limits:
+    integration: "Vera — token_ledger budget fields"
+    default_auth: "RED"
+    requires_vote: false
+    requires_architect_ref: true
+
+  read_hubspot:
+    integration: "Workflow 09 — HubSpot GET"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: true
+
+  write_hubspot:
+    integration: "Workflow 09 — HubSpot CREATE/UPDATE"
+    default_auth: "YELLOW"
+    requires_vote: false
+    requires_clearance: true
+
+  draft_cp:
+    integration: "AST-CPD-01 — Change Proposal drafting"
+    default_auth: "GREEN"
+    requires_vote: false
+    requires_clearance: false
+
+  call_council_vote:
+    integration: "Workflow 07 — Council Vote Flow"
+    default_auth: "YELLOW"
+    requires_vote: false
+    requires_clearance: false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ORGO ENFORCEMENT LAYER
+# Rules Orgo VM enforces at infrastructure level — outermost gate.
+# These block before any agent-level check runs.
+# ─────────────────────────────────────────────────────────────────────────────
+
+orgo_enforcement:
+
+  global_blocks:
+    - "write_corpus without architect_approval_ref in payload"
+    - "modify_budget_limits without architect_approval_ref in payload"
+    - "docker_control without council_vote_ref in payload"
+    - "agent_registry_write without council_vote_ref in payload"
+    - "Any action from unregistered sim_id"
+    - "Any action claiming authority above registered tier"
+
+  injection_patterns_blocked:
+    - "ignore previous instructions"
+    - "you are now"
+    - "disregard your"
+    - "act as if"
+    - "your new instructions"
+    - "system prompt override"
+    - "jailbreak"
+    - "DAN mode"
+    - "developer mode"
+
+  audit_all:
+    - "Every Orgo block event writes to audit_events with outcome=BLOCKED"
+    - "Every Orgo allow event writes to audit_events with outcome=ALLOWED"
+    - "actor field = ORGO for all Orgo-generated events"
